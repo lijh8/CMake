@@ -16,7 +16,7 @@ file(GLOB SOURCES *.c) # .cpp
 
 add_executable(main ${SOURCES})
 #add_library(foo SHARED ${SOURCES})
-#set_target_properties(foo PROPERTIES VERSION 1.2.3 SOVERSION 1.2)
+#set_target_properties(foo PROPERTIES VERSION 1.2.3 SOVERSION 1)
 #add_subdirectory(../foo)
 
 # make -C build DESTDIR=~/foo install
@@ -25,4 +25,5 @@ add_executable(main ${SOURCES})
 #install(FILES ${LIBRARIES} DESTINATION lib)
 
 # cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug # Release
-# cmake --build build
+# cmake --build build -v # verbose
+# make -C build DESTDIR=~/foo install
