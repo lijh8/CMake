@@ -1,2 +1,1 @@
-# Hello_CMake
-Hello CMake
+# CMake
