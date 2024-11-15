@@ -1,7 +1,7 @@
-#include <stdio.h>
-#include <signal.h>
-#include <sanitizer/lsan_interface.h>
 #include "foo.h"
+#include <sanitizer/lsan_interface.h>
+#include <signal.h>
+#include <stdio.h>
 
 void handlerCont(int signum) {
   printf("SIGCONT %d\n", signum);
@@ -15,8 +15,15 @@ int main() {
   //...
   printf("main\n");
   foo();
-  int a[1024];
-  int n = 102400;
-  a[n] = 1;
 
+  int a[3];
+  int i = 0;
+
+  // i = 3;      // ok, reported
+
+  // i = 102400; // not reported?
+
+  a[i] = 1;
+
+  return 0;
 }
