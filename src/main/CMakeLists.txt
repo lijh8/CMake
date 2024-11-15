@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.18)
 project(MyProject VERSION 1.0)
-set(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
-set(CMAKE_INSTALL_RPATH $ORIGIN/../lib)
 
 if (CMAKE_BUILD_TYPE STREQUAL Debug)
+  add_compile_options(-fsanitize=address)
   add_link_options(-fsanitize=address)
 endif()
+
 link_libraries(foo)
 link_directories(../foo)
 include_directories(../foo)
@@ -20,10 +20,12 @@ add_executable(main ${SOURCES})
 #add_subdirectory(../foo)
 
 # make -C build DESTDIR=~/foo install
-#install(TARGETS main foo)
+#install(TARGETS main) # foo
 #file(GLOB LIBRARIES ../lib/*.so*)
 #install(FILES ${LIBRARIES} DESTINATION lib)
 
 # cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug # Release
 # cmake --build build -v # verbose
+#   LD_LIBRARY_PATH=./foo  ./main/main
+# DYLD_LIBRARY_PATH=./foo  ./main/main  # macOS
 # make -C build DESTDIR=~/foo install
