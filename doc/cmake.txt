@@ -58,7 +58,8 @@ foo links to bar,
 main links to foo,
 
 if foo links to bar PUBLIC, then main can use ` #include bar.h `,
-and call functions bar.h/bar.cpp, without explicitly linking to bar, this is transitive.
+and call functions in bar.h/bar.cpp, without explicitly linking to bar.
+this is transitive.
 
 PRIVATE: Dependencies are only used by foo and are not propagated to main;
 
