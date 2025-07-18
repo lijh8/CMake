@@ -1,0 +1,123 @@
+CMake
+
+
+---
+
+
+By default, CMake uses RPATH (runtime path) for the build but removes RPATH during install.
+RPATH is a path encoded directly into the executable, specifying where to find the linked libraries.
+If a relative path is enabled, the ` $origin ` starts from the location of the executable.
+
+set(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
+set(CMAKE_INSTALL_RPATH $ORIGIN/../lib)
+
+
+---
+
+
+https://wiki.debian.org/RpathIssue ,
+https://cmake.org/cmake/help/latest/variable/CMAKE_SKIP_BUILD_RPATH.html#variable:CMAKE_SKIP_BUILD_RPATH ,
+https://cmake.org/cmake/help/latest/variable/CMAKE_SKIP_INSTALL_RPATH.html#variable:CMAKE_SKIP_INSTALL_RPATH ,
+
+To omit RPATH in both the build and install steps, use CMAKE_SKIP_RPATH instead.
+
+set(CMAKE_SKIP_RPATH TRUE)
+
+
+---
+
+
+$ cmake -S . -B build
+$
+$ cmake --build build -v
+$
+$ LD_LIBRARY_PATH=build/foo/:build/bar/ ./build/main/main
+$
+$ LD_LIBRARY_PATH=build/foo/:build/bar/ ldd ./build/main/main
+        linux-vdso.so.1 (0x00007f026d4e6000)
+        libfoo.so => build/foo/libfoo.so (0x00007f026d4d6000)
+        libbar.so => build/bar/libbar.so (0x00007f026d4d1000)
+        libstdc++.so.6 => /lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007f026d200000)
+        libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f026d00a000)
+        libm.so.6 => /lib/x86_64-linux-gnu/libm.so.6 (0x00007f026cf1a000)
+        /lib64/ld-linux-x86-64.so.2 (0x00007f026d4e8000)
+        libgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007f026d48d000)
+$
+
+
+---
+
+
+https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#target-command-scope ,
+
+main -> foo -> bar
+     |         |
+     +---------+
+
+foo links to bar,
+main links to foo,
+
+if foo links to bar PUBLIC, then main can use ` #include bar.h `,
+and call functions bar.h/bar.cpp, without explicitly linking to bar, this is transitive.
+
+PRIVATE: Dependencies are only used by foo and are not propagated to main;
+
+PUBLIC: Dependencies are used by foo and propagated to main;
+
+INTERFACE: Dependencies are not used by foo itself but are propagated to main
+            (useful for header-only libraries).
+
+
+$ ls
+bar  CMakeLists.txt  foo  main
+$
+$ tree
+.
+├── bar
+│   ├── bar.cpp
+│   ├── bar.h
+│   └── CMakeLists.txt
+├── CMakeLists.txt
+├── foo
+│   ├── CMakeLists.txt
+│   ├── foo.cpp
+│   └── foo.h
+└── main
+    ├── CMakeLists.txt
+    ├── main.cpp
+    ├── main.d
+    ├── main.o
+    └── Makefile
+
+$ cat CMakeLists.txt
+cmake_minimum_required(VERSION 3.18)
+project(MyProject VERSION 1.0)
+
+set(CMAKE_SKIP_RPATH TRUE)
+add_subdirectory(bar)
+add_subdirectory(foo)
+add_subdirectory(main)
+$
+$ cat bar/CMakeLists.txt
+file(GLOB SOURCES *.cpp) # .cpp
+add_library(bar SHARED ${SOURCES})
+$
+$ cat foo/CMakeLists.txt
+file(GLOB SOURCES *.cpp) # .cpp
+add_library(foo SHARED ${SOURCES})
+
+# PRIVATE, PUBLIC, INTERFACE
+target_link_libraries(foo PUBLIC bar)
+target_include_directories(foo PUBLIC ../bar)
+$
+$ cat main/CMakeLists.txt
+file(GLOB SOURCES *.cpp) # .cpp
+add_executable(main ${SOURCES})
+
+# PRIVATE, PUBLIC, INTERFACE
+target_link_libraries(main PRIVATE foo)
+target_include_directories(main PRIVATE ../foo)
+$
+
+
+---
